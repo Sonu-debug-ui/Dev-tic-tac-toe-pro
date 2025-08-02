@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev.TicTacToe() - Professional Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            color: #c9d1d9;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 25% 25%, #30363d22 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, #21262d22 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .terminal-header {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px 8px 0 0;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #7d8590;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .btn-close { background: #ff5f56; }
+        .btn-minimize { background: #ffbd2e; }
+        .btn-maximize { background: #27ca3f; }
+
+        .terminal-title {
+            margin-left: auto;
+            color: #f0f6fc;
+            font-weight: 500;
+        }
+
+        .game-container, .player-setup {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 0 0 8px 8px;
+            padding: 30px;
+            box-shadow: 
+                0 16px 32px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .player-setup {
+            border-radius: 8px;
+            margin-bottom: 0;
+        }
+
+        h1, h2 {
+            color: #58a6ff;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+        }
+
+        .code-comment {
+            color: #8b949e;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .code-comment::before {
+            content: '// ';
+            color: #7c3aed;
+        }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+            background: #161b22;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+
+        .score {
+            text-align: center;
+            padding: 12px;
+            background: #21262d;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            transition: all 0.3s ease;
+        }
+
+        .score:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 0 10px rgba(88, 166, 255, 0.2);
+        }
+
+        .score-label {
+            color: #7d8590;
+            margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            color: #f0f6fc;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(240, 246, 252, 0.3);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 8px;
+            margin: 20px auto;
+            background: #161b22;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .cell {
+            background: #21262d;
+            border: 1px solid #30363d;
+            font-size: 36px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'JetBrains Mono', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cell:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+            transform: scale(0.95);
+            box-shadow: 
+                0 0 15px rgba(88, 166, 255, 0.3),
+                inset 0 0 15px rgba(88, 166, 255, 0.1);
+        }
+
+        .cell:hover::before {
+            left: 100%;
+        }
+
+        .cell:disabled {
+            cursor: not-allowed;
+        }
+
+        .cell.x {
+            color: #ff7b72;
+            text-shadow: 0 0 10px rgba(255, 123, 114, 0.5);
+        }
+
+        .cell.o {
+            color: #79c0ff;
+            text-shadow: 0 0 10px rgba(121, 192, 255, 0.5);
+        }
+
+        .game-info {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #c9d1d9;
+        }
+
+        .current-player {
+            color: #58a6ff;
+            text-shadow: 0 0 8px rgba(88, 166, 255, 0.4);
+        }
+
+        .winner {
+            color: #56d364;
+            animation: pulse 1.5s infinite;
+        }
+
+        .winner-box {
+            background: linear-gradient(135deg, #1a7f37, #2da44e, #1a7f37);
+            background-size: 200% 200%;
+            animation: codeGlow 2s ease infinite;
+            color: #f0f6fc;
+            text-shadow: 0 0 10px rgba(240, 246, 252, 0.8);
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 20px;
+            margin: 10px 0;
+            border: 1px solid #2da44e;
+            box-shadow: 
+                0 0 20px rgba(45, 164, 78, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes codeGlow {
+            0%, 100% { 
+                background-position: 0% 50%;
+                box-shadow: 0 0 20px rgba(45, 164, 78, 0.4);
+            }
+            50% { 
+                background-position: 100% 50%;
+                box-shadow: 0 0 30px rgba(45, 164, 78, 0.6);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .draw {
+            color: #f85149;
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #238636, #2da44e);
+            color: #f0f6fc;
+            border: 1px solid #2da44e;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #2da44e, #3fb950);
+            border-color: #3fb950;
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 16px rgba(45, 164, 78, 0.3),
+                0 0 20px rgba(45, 164, 78, 0.2);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #da3633, #f85149);
+            border-color: #f85149;
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #f85149, #ff7b72);
+            border-color: #ff7b72;
+            box-shadow: 
+                0 8px 16px rgba(248, 81, 73, 0.3),
+                0 0 20px rgba(248, 81, 73, 0.2);
+        }
+
+        .name-input {
+            display: flex;
+            justify-content: space-around;
+            gap: 24px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .player-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .player-input label {
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #58a6ff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player-input input {
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 200px;
+            text-align: center;
+            background: #21262d;
+            color: #f0f6fc;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .player-input input:focus {
+            outline: none;
+            border-color: #58a6ff;
+            background: #161b22;
+            box-shadow: 
+                0 0 0 3px rgba(88, 166, 255, 0.1),
+                0 0 15px rgba(88, 166, 255, 0.2);
+        }
+
+        .player-input input::placeholder {
+            color: #7d8590;
+            font-style: italic;
+        }
+
+        .start-game-btn {
+            background: linear-gradient(135deg, #1f6feb, #58a6ff);
+            border-color: #58a6ff;
+            padding: 14px 32px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .start-game-btn:hover {
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            border-color: #79c0ff;
+            box-shadow: 
+                0 8px 16px rgba(88, 166, 255, 0.3),
+                0 0 20px rgba(88, 166, 255, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #21262d;
+            border-top: 1px solid #30363d;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #7d8590;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .developer-credit {
+            margin-top: 30px;
+            padding: 20px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .developer-credit p {
+            color: #7d8590;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .github-link {
+            color: #58a6ff;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #21262d;
+            transition: all 0.3s ease;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .github-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .github-link:hover {
+            color: #79c0ff;
+            border-color: #58a6ff;
+            background: #0d1117;
+            box-shadow: 
+                0 0 15px rgba(88, 166, 255, 0.3),
+                inset 0 0 15px rgba(88, 166, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .github-link:hover::before {
+            left: 100%;
+        }
+
+        .github-link:active {
+            transform: translateY(0);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #56d364;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @media (max-width: 768px) {
+            .name-input {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-header">
+        <div class="terminal-buttons">
+            <div class="terminal-btn btn-close"></div>
+            <div class="terminal-btn btn-minimize"></div>
+            <div class="terminal-btn btn-maximize"></div>
+        </div>
+        <div class="terminal-title">~/dev/tic-tac-toe-pro/game.js</div>
+    </div>
+
+    <div class="player-setup" id="playerSetup">
+        <h2>class PlayerSetup {</h2>
+        <div class="code-comment">Initialize player instances for the game session</div>
+        <div class="name-input">
+            <div class="player-input">
+                <label for="playerXName">Player.X.name:</label>
+                <input type="text" id="playerXName" placeholder="Enter username" maxlength="15">
+            </div>
+            <div class="player-input">
+                <label for="playerOName">Player.O.name:</label>
+                <input type="text" id="playerOName" placeholder="Enter username" maxlength="15">
+            </div>
+        </div>
+        <div class="code-comment">Optional: Leave blank for default values</div>
+        <button class="start-game-btn" onclick="startGame()">game.start()</button>
+        
+        <div class="developer-credit">
+            <p>// Developer Information</p>
+            <a href="https://github.com/Sonu-debug-ui" target="_blank" class="github-link">
+                Made by Sonu-debug-ui - Click to see profile
+            </a>
+        </div>
+    </div>
+
+    <div class="game-container hidden" id="gameContainer">
+        <h1>Dev.TicTacToe()</h1>
+        <div class="code-comment">Professional Edition - Battle of the Algorithms</div>
+        
+        <div class="scoreboard">
+            <div class="score">
+                <div class="score-label" id="labelX">Player.X</div>
+                <div class="score-value" id="scoreX">0</div>
+            </div>
+            <div class="score">
+                <div class="score-label">Draw</div>
+                <div class="score-value" id="scoreDraw">0</div>
+            </div>
+            <div class="score">
+                <div class="score-label" id="labelO">Player.O</div>
+                <div class="score-value" id="scoreO">0</div>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <span id="gameStatus" class="current-player">Awaiting player input...</span>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <button class="cell" data-index="0"></button>
+            <button class="cell" data-index="1"></button>
+            <button class="cell" data-index="2"></button>
+            <button class="cell" data-index="3"></button>
+            <button class="cell" data-index="4"></button>
+            <button class="cell" data-index="5"></button>
+            <button class="cell" data-index="6"></button>
+            <button class="cell" data-index="7"></button>
+            <button class="cell" data-index="8"></button>
+        </div>
+
+        <div class="controls">
+            <button onclick="newGame()">new Game()</button>
+            <button class="reset-btn" onclick="resetScores()">reset.all()</button>
+            <button onclick="changeNames()">config.players()</button>
+        </div>
+
+        <div class="developer-credit">
+            <p>// Developer Information</p>
+            <a href="https://github.com/Sonu-debug-ui" target="_blank" class="github-link">
+                Made by Sonu-debug-ui - Click to see profile
+            </a>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-indicator"></div>
+            <span>Connected to game.server</span>
+        </div>
+        <div class="status-item">
+            <span>JavaScript ES6+ | TicTacToe v2.1.0 | MIT License</span>
+        </div>
+    </div>
+
+    <script>
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let scores = { X: 0, O: 0, draw: 0 };
+        let playerNames = { X: 'Dev.X', O: 'Dev.O' };
+
+        const cells = document.querySelectorAll('.cell');
+        const gameStatus = document.getElementById('gameStatus');
+        const scoreX = document.getElementById('scoreX');
+        const scoreO = document.getElementById('scoreO');
+        const scoreDraw = document.getElementById('scoreDraw');
+        const labelX = document.getElementById('labelX');
+        const labelO = document.getElementById('labelO');
+        const playerSetup = document.getElementById('playerSetup');
+        const gameContainer = document.getElementById('gameContainer');
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+            [0, 4, 8], [2, 4, 6] // diagonals
+        ];
+
+        function startGame() {
+            const playerXName = document.getElementById('playerXName').value.trim();
+            const playerOName = document.getElementById('playerOName').value.trim();
+
+            playerNames.X = playerXName || 'Dev.X';
+            playerNames.O = playerOName || 'Dev.O';
+
+            labelX.textContent = playerNames.X;
+            labelO.textContent = playerNames.O;
+
+            playerSetup.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+
+            updateGameStatus();
+            console.log(`Game initialized: ${playerNames.X} vs ${playerNames.O}`);
+        }
+
+        function changeNames() {
+            gameContainer.classList.add('hidden');
+            playerSetup.classList.remove('hidden');
+            
+            document.getElementById('playerXName').value = playerNames.X === 'Dev.X' ? '' : playerNames.X;
+            document.getElementById('playerOName').value = playerNames.O === 'Dev.O' ? '' : playerNames.O;
+        }
+
+        function updateGameStatus() {
+            if (gameActive) {
+                gameStatus.innerHTML = `<span class="current-player">${playerNames[currentPlayer]}.move() // Awaiting input</span>`;
+            }
+        }
+
+        function handleCellClick(e) {
+            const index = e.target.getAttribute('data-index');
+            
+            if (board[index] !== '' || !gameActive) {
+                return;
+            }
+
+            board[index] = currentPlayer;
+            e.target.textContent = currentPlayer;
+            e.target.classList.add(currentPlayer.toLowerCase());
+            e.target.disabled = true;
+
+            console.log(`${playerNames[currentPlayer]} played ${currentPlayer} at position [${Math.floor(index/3)}, ${index%3}]`);
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            let winningCombo = null;
+            
+            for (let i = 0; i < winningConditions.length; i++) {
+                const [a, b, c] = winningConditions[i];
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    roundWon = true;
+                    winningCombo = [a, b, c];
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                gameStatus.innerHTML = `<div class="winner-box">// ALGORITHM VICTORY<br/>${playerNames[currentPlayer]}.win() === true</div>`;
+                gameStatus.className = 'winner';
+                gameActive = false;
+                scores[currentPlayer]++;
+                updateScoreboard();
+                disableAllCells();
+                console.log(`Victory condition met: ${playerNames[currentPlayer]} wins with combination [${winningCombo}]`);
+                return;
+            }
+
+            if (!board.includes('')) {
+                gameStatus.innerHTML = `<div class="winner-box" style="background: linear-gradient(135deg, #f85149, #ff7b72);">// STACK OVERFLOW<br/>game.result === 'draw'</div>`;
+                gameStatus.className = 'draw';
+                gameActive = false;
+                scores.draw++;
+                updateScoreboard();
+                console.log('Game ended in draw - all positions filled');
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateGameStatus();
+        }
+
+        function disableAllCells() {
+            cells.forEach(cell => {
+                cell.disabled = true;
+            });
+        }
+
+        function updateScoreboard() {
+            scoreX.textContent = scores.X;
+            scoreO.textContent = scores.O;
+            scoreDraw.textContent = scores.draw;
+        }
+
+        function newGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            updateGameStatus();
+
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.disabled = false;
+                cell.classList.remove('x', 'o');
+            });
+            
+            console.log('New game instance created');
+        }
+
+        function resetScores() {
+            scores = { X: 0, O: 0, draw: 0 };
+            updateScoreboard();
+            newGame();
+            console.log('Score matrix reset to zero state');
+        }
+
+        // Add event listeners to cells
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+
+        // Console welcome message
+        console.log('%c🎮 Dev.TicTacToe() Professional Edition', 'color: #58a6ff; font-size: 16px; font-weight: bold;');
+        console.log('%cGame engine initialized successfully', 'color: #56d364;');
+        console.log('%cDeveloped by: Sonu-debug-ui', 'color: #f0f6fc;');
+        console.log('%cGitHub: https://github.com/Sonu-debug-ui', 'color: #58a6ff;');
+        console.log('%cType help() for available commands', 'color: #7d8590;');
+
+        // Developer easter egg
+        window.help = function() {
+            console.log(`
+%cDev.TicTacToe() - Available Commands:
+%c├── newGame()%c - Initialize new game instance
+%c├── resetScores()%c - Reset score matrix
+%c├── changeNames()%c - Modify player configurations
+%c└── game.board%c - View current board state
+            `, 
+            'color: #58a6ff; font-weight: bold;',
+            'color: #f85149;', 'color: #7d8590;',
+            'color: #f85149;', 'color: #7d8590;',
+            'color: #f85149;', 'color: #7d8590;',
+            'color: #f85149;', 'color: #7d8590;'
+            );
+        };
+
+        Object.defineProperty(window, 'game', {
+            get: function() {
+                return {
+                    board: board,
+                    currentPlayer: currentPlayer,
+                    scores: scores,
+                    players: playerNames,
+                    active: gameActive
+                };
+            }
+        });
+    </script>
+</body>
+  </html>
